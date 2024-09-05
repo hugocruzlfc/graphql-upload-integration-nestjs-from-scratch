@@ -18,6 +18,8 @@ export class UploadFileResolver {
 
       const stream = createReadStream();
 
+      // Do something with the stream or process the file
+
       console.log(stream);
       return true;
     } catch (err) {

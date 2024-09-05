@@ -24,62 +24,43 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- This project is about compatibility and being able to add [graphql-upload](https://www.npmjs.com/package/graphql-upload) to [Nest.js](https://docs.nestjs.com/)
 
-## Project setup
+- The current version of graphql-upload, 5/09/2024, is 16.0.2. which has caused compatibility problems with Nest.js, commonjs modules and .mjs files.
 
-```bash
-$ npm install
+-If you decide to use a recent version you should use it like this in the main file of your project:
+
+```typescript
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  // ...
+
+  const { default: graphqlUploadExpress } = await import(
+    'graphql-upload/graphqlUploadExpress.mjs'
+  );
+  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+
+  // ...
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(configService.get<number>('port'));
+}
 ```
 
-## Compile and run the project
+- Personally, I prefer to use the version 13.0.0 and "@types/graphql-upload": "8.0.12", which is the one that I have used in this project.
+
+## Testing the implementation
+
+- You can try using the following curl:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+curl localhost:3000/graphql \
+  -H "x-apollo-operation-name: upload_file" \
+  -F operations='{ "query": "mutation ($file: Upload!) { upload_file(file: $file) }", "variables": { "file": null } }' \
+  -F map='{ "0": ["variables.file"] }' \
+  -F 0=@Product2.jpg
 ```
 
-## Run tests
+## Apollo Federation
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- If you want to use Apollo Federation you can visit the guys from [Profusion](https://www.npmjs.com/package/@profusion/apollo-federation-upload).
